@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Game Puzzle Angka</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #timer {
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    #puzzle {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+    }
+    .tile {
+      background-color: #3498db;
+      color: white;
+      font-size: 32px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.3s;
+    }
+    .tile:hover {
+      background-color: #2980b9;
+      transform: scale(1.05);
+    }
+    .empty {
+      background-color: transparent;
+      cursor: default;
+    }
+    #message {
+      margin-top: 15px;
+      font-size: 18px;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Puzzle Angka</h1>
+  <div id="timer">Waktu: 03:00</div>
+  <div id="puzzle"></div>
+  <div id="message"></div>
+
+  <script>
+    const puzzle = document.getElementById("puzzle");
+    const timerDisplay = document.getElementById("timer");
+    const message = document.getElementById("message");
+
+    let tiles = [...Array(8).keys()].map(i => i + 1).concat(null);
+    let time = 180;
+    let timer;
+
+    function shuffle(array) {
+      let currentIndex = array.length, randomIndex;
+      while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+      }
+      return array;
+    }
+
+    function drawPuzzle() {
+      puzzle.innerHTML = "";
+      tiles.forEach((tile, index) => {
+        const div = document.createElement("div");
+        div.classList.add("tile");
+        if (tile === null) {
+          div.classList.add("empty");
+        } else {
+          div.textContent = tile;
+          div.addEventListener("click", () => moveTile(index));
+        }
+        puzzle.appendChild(div);
+      });
+    }
+
+    function moveTile(index) {
+      const emptyIndex = tiles.indexOf(null);
+      const validMoves = [index - 1, index + 1, index - 3, index + 3];
+      if (validMoves.includes(emptyIndex) &&
+          !(index % 3 === 0 && emptyIndex === index - 1) &&
+          !(index % 3 === 2 && emptyIndex === index + 1)) {
+        [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+        drawPuzzle();
+        checkWin();
+      }
+    }
+
+    function startTimer() {
+      timer = setInterval(() => {
+        time--;
+        const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+        const seconds = String(time % 60).padStart(2, '0');
+        timerDisplay.textContent = `Waktu: ${minutes}:${seconds}`;
+        if (time <= 0) {
+          clearInterval(timer);
+          message.textContent = "Waktu habis!";
+          disableAll();
+        }
+      }, 1000);
+    }
+
+    function checkWin() {
+      const win = [...Array(8).keys()].map(i => i + 1).concat(null);
+      if (JSON.stringify(tiles) === JSON.stringify(win)) {
+        clearInterval(timer);
+        message.textContent = "Selamat! Kamu menang!";
+        disableAll();
+      }
+    }
+
+    function disableAll() {
+      const allTiles = document.querySelectorAll(".tile");
+      allTiles.forEach(tile => tile.replaceWith(tile.cloneNode(true)));
+    }
+
+    function startGame() {
+      shuffle(tiles);
+      drawPuzzle();
+      startTimer();
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
